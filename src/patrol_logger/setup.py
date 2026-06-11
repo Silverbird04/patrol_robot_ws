@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'event_logger = patrol_logger.event_logger:main',
+            'alert_manager = patrol_logger.alert_manager:main',
         ],
     },
 )
