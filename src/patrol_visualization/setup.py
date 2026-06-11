@@ -13,9 +13,9 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='se010',
-    maintainer_email='se010@todo.todo',
-    description='TODO: Package description',
+    maintainer='user04',
+    maintainer_email='se010s@ewha.ac.kr',
+    description='RViz marker visualization package for patrol robot events',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'hazard_marker_publisher = patrol_visualization.hazard_marker_publisher:main',
         ],
     },
 )

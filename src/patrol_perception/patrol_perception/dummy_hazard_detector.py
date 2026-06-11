@@ -1,5 +1,3 @@
-import json
-import time
 
 import cv2
 import rclpy
@@ -7,7 +5,9 @@ from rclpy.node import Node
 
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
+
+from patrol_msgs.msg import CheckRequest
+from patrol_msgs.msg import HazardEvent
 
 
 class DummyHazardDetector(Node):
@@ -16,6 +16,10 @@ class DummyHazardDetector(Node):
 
         self.bridge = CvBridge()
 
+        self.latest_request = None
+        self.pending_check = False
+        self.frame_count = 0
+
         self.image_sub = self.create_subscription(
             Image,
             '/camera/image_raw',
@@ -23,16 +27,33 @@ class DummyHazardDetector(Node):
             10
         )
 
-        self.hazard_pub = self.create_publisher(
-            String,
+        self.check_sub = self.create_subscription(
+            CheckRequest,
+            '/check_request',
+            self.check_request_callback,
+            10
+        )
+
+        self.event_pub = self.create_publisher(
+            HazardEvent,
             '/hazard_event',
             10
         )
 
-        self.frame_count = 0
-        self.last_publish_time = 0.0
-
         self.get_logger().info('Dummy hazard detector started.')
+        self.get_logger().info('Waiting for /check_request.')
+
+    def check_request_callback(self, msg):
+        self.latest_request = msg
+        self.pending_check = True
+
+        self.get_logger().info(
+            f'Received check request: '
+            f'id={msg.waypoint_id}, '
+            f'name={msg.waypoint_name}, '
+            f'type={msg.waypoint_type}, '
+            f'items={list(msg.check_items)}'
+        )
 
     def image_callback(self, msg):
         self.frame_count += 1
@@ -44,7 +65,6 @@ class DummyHazardDetector(Node):
 
         height, width, _ = frame.shape
 
-        # 화면 중앙 ROI
         x1 = int(width * 0.35)
         y1 = int(height * 0.30)
         x2 = int(width * 0.65)
@@ -61,46 +81,96 @@ class DummyHazardDetector(Node):
             2
         )
 
-        # 임시 이상 감지 조건:
-        # 100프레임마다 한 번 이상 상황 발생했다고 가정
-        if self.frame_count % 100 == 0:
-            self.publish_dummy_hazard()
-
+        if self.latest_request is not None:
+            label = (
+                f'Current request: '
+                f'{self.latest_request.waypoint_id} '
+                f'{self.latest_request.waypoint_type}'
+            )
             cv2.putText(
                 frame,
-                'DUMMY HAZARD DETECTED',
-                (30, 50),
+                label,
+                (30, 40),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (0, 0, 255),
+                0.7,
+                (255, 255, 255),
                 2
             )
+
+        if self.pending_check and self.latest_request is not None:
+            event_msg = self.perform_dummy_check(self.latest_request)
+            self.event_pub.publish(event_msg)
+
+            if event_msg.is_abnormal:
+                cv2.putText(
+                    frame,
+                    'DUMMY HAZARD DETECTED',
+                    (30, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 0, 255),
+                    2
+                )
+
+                self.get_logger().warn(
+                    f'Published hazard event: '
+                    f'{event_msg.event_type}, '
+                    f'waypoint={event_msg.waypoint_id}'
+                )
+            else:
+                cv2.putText(
+                    frame,
+                    'NORMAL CHECK',
+                    (30, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 255, 0),
+                    2
+                )
+
+                self.get_logger().info(
+                    f'Published normal event: '
+                    f'{event_msg.event_type}, '
+                    f'waypoint={event_msg.waypoint_id}'
+                )
+
+            self.pending_check = False
 
         cv2.imshow('Dummy Hazard Detector', frame)
         cv2.waitKey(1)
 
-    def publish_dummy_hazard(self):
-        now = time.time()
+    def perform_dummy_check(self, request):
+        msg = HazardEvent()
 
-        # 너무 자주 publish하지 않도록 제한
-        if now - self.last_publish_time < 2.0:
-            return
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = 'map'
 
-        self.last_publish_time = now
+        msg.waypoint_id = request.waypoint_id
+        msg.waypoint_type = request.waypoint_type
 
-        event = {
-            'event_type': 'dummy_hazard',
-            'waypoint_id': 0,
-            'waypoint_type': 'test_area',
-            'is_abnormal': True,
-            'description': 'Dummy hazard detected in inspection ROI'
-        }
+        msg.x = request.x
+        msg.y = request.y
+        msg.yaw = request.yaw
 
-        msg = String()
-        msg.data = json.dumps(event)
+        # 임시 판단 규칙:
+        # restricted_area에서 person 점검이면 이상 상황으로 가정
+        # passage에서 obstacle 점검이면 정상으로 가정
+        if request.waypoint_type == 'restricted_area' and 'person' in request.check_items:
+            msg.event_type = 'dummy_hazard'
+            msg.is_abnormal = True
+            msg.description = (
+                f'Dummy person intrusion detected at waypoint '
+                f'{request.waypoint_id} ({request.waypoint_name})'
+            )
+        else:
+            msg.event_type = 'normal_check'
+            msg.is_abnormal = False
+            msg.description = (
+                f'No hazard detected at waypoint '
+                f'{request.waypoint_id} ({request.waypoint_name})'
+            )
 
-        self.hazard_pub.publish(msg)
-        self.get_logger().warn(f'Published hazard event: {msg.data}')
+        return msg
 
 
 def main(args=None):
