@@ -211,7 +211,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'launch_rviz',
-            default_value='true',
+            default_value='false',
             description='Whether to launch RViz for Nav2 visualization'
         ),
 
