@@ -7,10 +7,15 @@
   <maintainer email="se010s@ewha.ac.kr">user04</maintainer>
   <license>TODO: License declaration</license>
 
+  <buildtool_depend>ament_python</buildtool_depend>
+
   <depend>rclpy</depend>
   <depend>visualization_msgs</depend>
   <depend>geometry_msgs</depend>
   <exec_depend>patrol_msgs</exec_depend>
+  <exec_depend>patrol_manager</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>builtin_interfaces</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

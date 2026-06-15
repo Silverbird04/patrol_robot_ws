@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'hazard_marker_publisher = patrol_visualization.hazard_marker_publisher:main',
+            'hazard_marker_node = patrol_visualization.hazard_marker_node:main',
         ],
     },
 )

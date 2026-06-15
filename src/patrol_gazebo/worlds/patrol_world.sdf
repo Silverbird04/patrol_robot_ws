@@ -73,5 +73,31 @@
       </link>
     </model>
 
+        <!-- Patrol demo obstacle: placed in front of side_passage waypoint -->
+    <model name="passage_obstacle_box">
+      <static>true</static>
+      <pose>4.55 0.55 0.25 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.35 0.35 0.50</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1.0 0.4 0.0 1</ambient>
+            <diffuse>1.0 0.4 0.0 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.35 0.35 0.50</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
   </world>
 </sdf>

@@ -29,8 +29,8 @@ class DummyHazardDetector(Node):
         self.last_result_text = 'WAITING FOR CHECK REQUEST'
         self.last_result_color = (0, 255, 255)  # yellow
 
-        self.obstacle_distance_threshold = 0.8
-        self.front_angle_deg = 15.0
+        self.obstacle_distance_threshold = 1.7
+        self.front_angle_deg = 30.0
 
         self.image_sub = self.create_subscription(
             Image,
