@@ -202,10 +202,17 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
+    patrol_navigation_share = get_package_share_directory('patrol_navigation')
+    default_map_path = os.path.join(
+        patrol_navigation_share,
+        'maps',
+        'patrol_map_large.yaml'
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'map',
-            default_value=os.path.expanduser('~/patrol_map.yaml'),
+            default_value=default_map_path,
             description='Absolute path to the saved patrol map yaml file'
         ),
 
