@@ -414,8 +414,8 @@ class HazardMarkerNode(Node):
     def create_obstacle_markers(self, index, waypoint_id, x, y, yaw, now):
         markers = []
 
-        obstacle_x = x + 1.45 * math.cos(yaw)
-        obstacle_y = y + 1.45 * math.sin(yaw)
+        obstacle_x = x + 1.40 * math.cos(yaw)
+        obstacle_y = y + 1.40 * math.sin(yaw)
 
         box = self.make_marker(
             ns='detected_obstacle_box',

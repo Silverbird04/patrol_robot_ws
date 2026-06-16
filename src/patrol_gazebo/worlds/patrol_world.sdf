@@ -76,7 +76,7 @@
         <!-- Patrol demo obstacle: placed in front of side_passage waypoint -->
     <model name="passage_obstacle_box">
       <static>true</static>
-      <pose>4.55 0.55 0.25 0 0 0</pose>
+      <pose>4.15 -0.75 0.25 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry>
