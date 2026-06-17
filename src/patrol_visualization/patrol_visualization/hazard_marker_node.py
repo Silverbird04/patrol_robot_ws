@@ -5,6 +5,7 @@ import yaml
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 
 from ament_index_python.packages import get_package_share_directory
 from builtin_interfaces.msg import Duration
@@ -62,11 +63,20 @@ class HazardMarkerNode(Node):
             10
         )
 
+        marker_qos = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL
+        )
+
         self.marker_pub = self.create_publisher(
             MarkerArray,
             '/patrol_markers',
-            10
+            marker_qos
         )
+
+        
 
         self.timer = self.create_timer(
             self.publish_period,
@@ -172,6 +182,18 @@ class HazardMarkerNode(Node):
                         now
                     )
                 )
+            
+            if waypoint_id == 5 and 'person' in waypoint.get('check_items', []):
+                marker_array.markers.extend(
+                    self.create_demo_person_markers(
+                        index,
+                        waypoint_id,
+                        x,
+                        y,
+                        yaw,
+                        now
+                    )
+                )
 
             marker_array.markers.extend(
                 self.create_waypoint_markers(
@@ -194,6 +216,7 @@ class HazardMarkerNode(Node):
                         waypoint_id,
                         x,
                         y,
+                        yaw,
                         now
                     )
                 )
@@ -346,22 +369,77 @@ class HazardMarkerNode(Node):
         markers.append(text)
 
         return markers
-
-    def create_person_intrusion_markers(self, index, waypoint_id, x, y, now):
+    
+    def create_demo_person_markers(self, index, waypoint_id, x, y, yaw, now):
         markers = []
+
+        person_x = x + 0.75 * math.cos(yaw)
+        person_y = y + 0.75 * math.sin(yaw)
+
+        body = self.make_marker(
+            ns='demo_person_body',
+            marker_id=3000 + index,
+            marker_type=Marker.CYLINDER,
+            x=person_x,
+            y=person_y,
+            z=0.42,
+            color=(0.2, 0.8, 1.0, 0.65),
+            now=now
+        )
+        body.scale.x = 0.22
+        body.scale.y = 0.22
+        body.scale.z = 0.62
+        markers.append(body)
+
+        head = self.make_marker(
+            ns='demo_person_head',
+            marker_id=3100 + index,
+            marker_type=Marker.SPHERE,
+            x=person_x,
+            y=person_y,
+            z=0.82,
+            color=(0.2, 0.8, 1.0, 0.75),
+            now=now
+        )
+        head.scale.x = 0.24
+        head.scale.y = 0.24
+        head.scale.z = 0.24
+        markers.append(head)
+
+        label = self.make_marker(
+            ns='demo_person_label',
+            marker_id=3200 + index,
+            marker_type=Marker.TEXT_VIEW_FACING,
+            x=person_x,
+            y=person_y,
+            z=1.12,
+            color=(0.2, 0.9, 1.0, 1.0),
+            now=now
+        )
+        label.scale.z = 0.18
+        label.text = 'Demo person'
+        markers.append(label)
+
+        return markers
+
+    def create_person_intrusion_markers(self, index, waypoint_id, x, y, yaw, now):
+        markers = []
+
+        person_x = x + 0.75 * math.cos(yaw)
+        person_y = y + 0.75 * math.sin(yaw)
 
         body = self.make_marker(
             ns='person_intrusion_body',
             marker_id=4000 + index,
             marker_type=Marker.CYLINDER,
-            x=x,
-            y=y,
+            x=person_x,
+            y=person_y,
             z=0.50,
             color=(1.0, 0.0, 0.0, 1.0),
             now=now
         )
-        body.scale.x = 0.30
-        body.scale.y = 0.30
+        body.scale.x = 0.32
+        body.scale.y = 0.32
         body.scale.z = 0.75
         markers.append(body)
 
@@ -369,23 +447,23 @@ class HazardMarkerNode(Node):
             ns='person_intrusion_head',
             marker_id=4100 + index,
             marker_type=Marker.SPHERE,
-            x=x,
-            y=y,
+            x=person_x,
+            y=person_y,
             z=0.98,
             color=(1.0, 0.2, 0.2, 1.0),
             now=now
         )
-        head.scale.x = 0.32
-        head.scale.y = 0.32
-        head.scale.z = 0.32
+        head.scale.x = 0.34
+        head.scale.y = 0.34
+        head.scale.z = 0.34
         markers.append(head)
 
         alert_ring = self.make_marker(
             ns='person_intrusion_alert_zone',
             marker_id=4150 + index,
             marker_type=Marker.CYLINDER,
-            x=x,
-            y=y,
+            x=person_x,
+            y=person_y,
             z=0.04,
             color=(1.0, 0.0, 0.0, 0.35),
             now=now
@@ -399,8 +477,8 @@ class HazardMarkerNode(Node):
             ns='person_intrusion_label',
             marker_id=4200 + index,
             marker_type=Marker.TEXT_VIEW_FACING,
-            x=x,
-            y=y,
+            x=person_x,
+            y=person_y,
             z=1.35,
             color=(1.0, 0.0, 0.0, 1.0),
             now=now

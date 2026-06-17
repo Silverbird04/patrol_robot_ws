@@ -3,6 +3,9 @@ import os
 
 import yaml
 
+from geometry_msgs.msg import Twist
+from tf2_ros import Buffer, TransformListener
+
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
@@ -24,7 +27,7 @@ class Nav2PatrolManager(Node):
         super().__init__('nav2_patrol_manager')
 
         self.declare_parameter('waypoint_file', 'waypoints.yaml')
-        self.declare_parameter('check_wait_time', 4.0)
+        self.declare_parameter('check_wait_time', 2.0)
         self.declare_parameter('loop_patrol', False)
 
         waypoint_file_name = (
@@ -76,6 +79,22 @@ class Nav2PatrolManager(Node):
         self.get_logger().info('navigate_to_pose action server is ready.')
         self.publish_waypoint_markers()
         self.send_next_goal()
+
+        self.cmd_vel_pub = self.create_publisher(
+            Twist,
+            '/cmd_vel',
+            10
+        )
+
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(
+            self.tf_buffer,
+            self
+        )
+
+        self.final_yaw_tolerance = 0.05
+        self.max_rotate_speed = 0.75
+        self.rotate_kp = 1.8
 
     def load_waypoints(self, waypoint_file_name):
         package_share = get_package_share_directory('patrol_manager')
@@ -130,6 +149,90 @@ class Nav2PatrolManager(Node):
         send_goal_future = self.nav_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self.goal_response_callback)
 
+    def normalize_angle(self, angle):
+        while angle > math.pi:
+            angle -= 2.0 * math.pi
+        while angle < -math.pi:
+            angle += 2.0 * math.pi
+        return angle
+
+    def get_current_yaw(self):
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                'map',
+                'base_link',
+                rclpy.time.Time()
+            )
+
+            q = transform.transform.rotation
+
+            yaw = math.atan2(
+                2.0 * (q.w * q.z + q.x * q.y),
+                1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            )
+
+            return yaw
+
+        except Exception as e:
+            self.get_logger().warn(
+                f'Failed to get current yaw from TF: {e}'
+            )
+            return None
+
+    def rotate_to_yaw(self, target_yaw, timeout_sec=5.0):
+        self.get_logger().info(
+            f'Final yaw alignment started. target_yaw={target_yaw:.2f}'
+        )
+
+        start_time = self.get_clock().now()
+
+        while rclpy.ok():
+            now = self.get_clock().now()
+            elapsed = (now - start_time).nanoseconds / 1e9
+
+            if elapsed > timeout_sec:
+                self.get_logger().warn(
+                    'Final yaw alignment timeout. Continuing patrol.'
+                )
+                break
+
+            current_yaw = self.get_current_yaw()
+
+            if current_yaw is None:
+                rclpy.spin_once(self, timeout_sec=0.1)
+                continue
+
+            yaw_error = self.normalize_angle(target_yaw - current_yaw)
+
+            # self.get_logger().info(
+            #     f'Yaw align: current={current_yaw:.2f}, '
+            #     f'target={target_yaw:.2f}, error={yaw_error:.2f}'
+            # )
+
+            if abs(yaw_error) < self.final_yaw_tolerance:
+                self.get_logger().info('Final yaw alignment completed.')
+                break
+
+            cmd = Twist()
+            angular_z = self.rotate_kp * yaw_error
+
+            angular_z = max(
+                -self.max_rotate_speed,
+                min(self.max_rotate_speed, angular_z)
+            )
+
+            cmd.angular.z = angular_z
+            self.cmd_vel_pub.publish(cmd)
+
+            rclpy.spin_once(self, timeout_sec=0.05)
+
+        stop_cmd = Twist()
+        self.cmd_vel_pub.publish(stop_cmd)
+
+        # 짧게 멈춘 뒤 카메라/라이다 값 안정화
+        for _ in range(5):
+            rclpy.spin_once(self, timeout_sec=0.1)
+
     def make_pose_stamped(self, x, y, yaw_rad):
         pose = PoseStamped()
 
@@ -167,6 +270,9 @@ class Nav2PatrolManager(Node):
             self.get_logger().info(
                 f'Waypoint {waypoint["id"]} ({waypoint["name"]}) reached.'
             )
+
+            
+            self.rotate_to_yaw(waypoint['yaw'])
 
             self.publish_check_request(waypoint)
 

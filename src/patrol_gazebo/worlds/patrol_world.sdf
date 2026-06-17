@@ -81,7 +81,7 @@
         <visual name="visual">
           <geometry>
             <box>
-              <size>0.35 0.35 0.50</size>
+              <size>0.70 0.70 0.50</size>
             </box>
           </geometry>
           <material>
@@ -92,12 +92,46 @@
         <collision name="collision">
           <geometry>
             <box>
-              <size>0.35 0.35 0.50</size>
+              <size>0.70 0.70 0.50</size>
             </box>
           </geometry>
         </collision>
       </link>
     </model>
+
+    <!-- Demo actor: camera-detected intruder near lab_entrance_restricted
+         Waypoint 5: x=1.65, y=1.35, yaw=3.14
+         Robot faces -X, so the actor is placed in front of waypoint 5. -->
+    <actor name="intruder_lab_entrance">
+      <pose>1.05 1.35 0.35 0 0 0.0</pose>
+      <skin>
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <scale>0.32</scale>
+      </skin>
+      <animation name="walk">
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <delay_start>0.0</delay_start>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walk">
+          <waypoint>
+            <time>0.0</time>
+            <pose>1.05 1.35 0.35 0 0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>15.0</time>
+            <pose>1.05 1.35 0.35 0 0 0.0</pose>
+          </waypoint>
+          <waypoint>
+            <time>30.0</time>
+            <pose>1.05 1.35 0.35 0 0 0.0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
 
   </world>
 </sdf>

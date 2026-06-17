@@ -1,49 +1,77 @@
 
 waypoints:
   - id: 1
-    name: main_corridor_start
+    name: normal_corridor_check
     type: passage
-    x: 0.70
-    y: 1.00
+    x: 1.00
+    y: 0.70
     yaw: 0.0
     check_items:
       - obstacle
 
   - id: 2
-    name: restricted_room_A
-    type: restricted_area
+    name: corridor_obstacle_zone
+    type: passage
     x: 1.25
     y: -1.85
+    yaw: -1.57
+    check_items:
+      - obstacle
+
+  - id: 3
+    name: restricted_room
+    type: restricted_area
+    x: 1.70
+    y: 1.70
     yaw: 1.57
     check_items:
       - person
 
-  - id: 3
-    name: central_corridor_obstacle_zone
-    type: passage
-    x: 2.70
-    y: -0.75
-    yaw: 0.0
-    check_items:
-      - obstacle
+# waypoints:
+#   - id: 1
+#     name: main_corridor_start
+#     type: passage
+#     x: 0.70
+#     y: 1.00
+#     yaw: 0.0
+#     check_items:
+#       - obstacle
 
-  - id: 4
-    name: upper_back_corridor
-    type: passage
-    x: 4.20
-    y: 1.20
-    yaw: 3.14
-    check_items:
-      - obstacle
+#   - id: 2
+#     name: restricted_room_A
+#     type: restricted_area
+#     x: 1.25
+#     y: -1.85
+#     yaw: 3.14
+#     check_items:
+#       - person
 
-  - id: 5
-    name: lab_entrance_restricted
-    type: restricted_area
-    x: 1.65
-    y: 1.35
-    yaw: 3.14
-    check_items:
-      - person
+#   - id: 3
+#     name: central_corridor_obstacle_zone
+#     type: passage
+#     x: 2.60
+#     y: -0.80
+#     yaw: 0.0
+#     check_items:
+#       - obstacle
+
+#   - id: 4
+#     name: upper_back_corridor
+#     type: passage
+#     x: 4.20
+#     y: 1.00
+#     yaw: 1.57
+#     check_items:
+#       - obstacle
+
+#   - id: 5
+#     name: lab_entrance_restricted
+#     type: restricted_area
+#     x: 2.80
+#     y: 1.80
+#     yaw: 3.14
+#     check_items:
+#       - person
 
 # waypoints:
 #   - id: 1
