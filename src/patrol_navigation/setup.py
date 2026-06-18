@@ -1,6 +1,8 @@
 from setuptools import find_packages, setup
+import os
+from glob import glob
 
-package_name = 'patrol_visualization'
+package_name = 'patrol_navigation'
 
 setup(
     name=package_name,
@@ -10,12 +12,24 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (
+            os.path.join('share', package_name, 'launch'),
+            glob('launch/*.launch.py')
+        ),
+        (
+            os.path.join('share', package_name, 'config'),
+            glob('config/*')
+        ),
+        (
+        os.path.join('share', package_name, 'maps'),
+        glob('maps/*')
+    ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='user04',
-    maintainer_email='se010s@ewha.ac.kr',
-    description='RViz marker visualization package for patrol robot events',
+    maintainer_email='se0102s@ewha.ac.kr',
+    description='Nav2 patrol package for patrol robot project',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -24,7 +38,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'hazard_marker_node = patrol_visualization.hazard_marker_node:main',
+            'nav2_patrol_manager = patrol_navigation.nav2_patrol_manager:main',
         ],
     },
 )

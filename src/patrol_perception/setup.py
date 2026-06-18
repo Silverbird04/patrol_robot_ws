@@ -26,6 +26,8 @@ setup(
         'console_scripts': [
             'camera_subscriber = patrol_perception.camera_subscriber:main',
             'dummy_hazard_detector = patrol_perception.dummy_hazard_detector:main',
+            'yolo_hazard_detector = patrol_perception.yolo_hazard_detector:main',
+            'camera_hazard_detector = patrol_perception.camera_hazard_detector:main',
         ],
     },
 )

@@ -1,6 +1,8 @@
 from setuptools import find_packages, setup
+import os
+from glob import glob
 
-package_name = 'patrol_logger'
+package_name = 'patrol_slam'
 
 setup(
     name=package_name,
@@ -10,12 +12,20 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (
+            os.path.join('share', package_name, 'launch'),
+            glob('launch/*.launch.py')
+        ),
+        (
+            os.path.join('share', package_name, 'config'),
+            glob('config/*')
+        ),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='se010',
-    maintainer_email='se010@todo.todo',
-    description='TODO: Package description',
+    maintainer='user04',
+    maintainer_email='se0102s@ewha.ac.kr',
+    description='SLAM launch package for patrol robot project',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -24,8 +34,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'event_logger = patrol_logger.event_logger:main',
-            'alert_manager = patrol_logger.alert_manager:main',
         ],
     },
 )
