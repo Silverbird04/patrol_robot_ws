@@ -70,16 +70,6 @@ class Nav2PatrolManager(Node):
             10
         )
 
-        self.get_logger().info('Nav2 patrol manager started.')
-        self.get_logger().info(f'Loaded {len(self.waypoints)} waypoints.')
-        self.get_logger().info('Waiting for navigate_to_pose action server...')
-
-        self.nav_client.wait_for_server()
-
-        self.get_logger().info('navigate_to_pose action server is ready.')
-        self.publish_waypoint_markers()
-        self.send_next_goal()
-
         self.cmd_vel_pub = self.create_publisher(
             Twist,
             '/cmd_vel',
@@ -91,6 +81,17 @@ class Nav2PatrolManager(Node):
             self.tf_buffer,
             self
         )
+
+        self.get_logger().info('Nav2 patrol manager started.')
+        self.get_logger().info(f'Loaded {len(self.waypoints)} waypoints.')
+        self.get_logger().info('Waiting for navigate_to_pose action server...')
+
+        self.nav_client.wait_for_server()
+
+        self.get_logger().info('navigate_to_pose action server is ready.')
+        self.publish_waypoint_markers()
+        self.send_next_goal()
+
 
         self.final_yaw_tolerance = 0.05
         self.max_rotate_speed = 0.75
@@ -271,8 +272,8 @@ class Nav2PatrolManager(Node):
                 f'Waypoint {waypoint["id"]} ({waypoint["name"]}) reached.'
             )
 
-            
-            self.rotate_to_yaw(waypoint['yaw'])
+            if int(waypoint['id']) in [2, 3]:
+                self.rotate_to_yaw(waypoint['yaw'])
 
             self.publish_check_request(waypoint)
 
