@@ -2,7 +2,7 @@
 Intelligent Robotics final project
 
 ### Team
-Innu
+이누(Innu)
 
 ### Name
 김세은(Seun Kim)
